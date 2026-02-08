@@ -10,6 +10,8 @@ COPY go.sum ./
 RUN go mod download
 
 COPY main.go ./
+COPY internal ./internal/
+COPY api ./api/
 
 RUN go build -o api-server main.go
 
