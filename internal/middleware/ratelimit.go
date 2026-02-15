@@ -3,16 +3,28 @@ package middleware
 
 import (
 	"encoding/json"
-	"log"
 	"net"
 	"net/http"
 
 	"github.com/snacksforus/distributed-rate-limiter/api/response"
 	"github.com/snacksforus/distributed-rate-limiter/internal/ratelimiter/slidingwindow"
+	"github.com/snacksforus/distributed-rate-limiter/internal/storage"
 )
 
+// RateLimitMiddleware is the representation for a rate limiting middleware.
+type RateLimitMiddleware struct {
+	rateLimiter *slidingwindow.SlidingWindow
+}
+
+// Init initializes the rate limiting middleware using storage provider s.
+func Init(s *storage.Storage) *RateLimitMiddleware {
+	return &RateLimitMiddleware{
+		rateLimiter: slidingwindow.Init(s),
+	}
+}
+
 // RateLimit limits the rate of requests from a client.
-func RateLimit(next http.Handler) http.Handler {
+func (rlm *RateLimitMiddleware) RateLimit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		clientId, _, err := net.SplitHostPort(r.RemoteAddr)
 		if err != nil {
@@ -20,12 +32,7 @@ func RateLimit(next http.Handler) http.Handler {
 			panic(err)
 		}
 
-		allow, err := slidingwindow.Allow(clientId)
-		if err != nil {
-			// Fail open, allow the request if there is an error with the limiter.
-			log.Println(err)
-			allow = true
-		}
+		allow := rlm.rateLimiter.Allow(clientId)
 
 		if !allow {
 			w.WriteHeader(429)

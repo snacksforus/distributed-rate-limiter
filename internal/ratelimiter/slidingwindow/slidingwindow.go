@@ -1,32 +1,30 @@
-// Package slidingwindow provides a sliding window rate limiter.
+// Package slidingwindow implements routines for rate limiting HTTP requests using a
+// sliding window algorithm.
 package slidingwindow
 
 import (
-	"context"
 	"log"
-	"strconv"
-	"time"
 
-	"github.com/redis/go-redis/v9"
+	"github.com/snacksforus/distributed-rate-limiter/internal/storage"
 )
 
-func Allow(clientId string) (bool, error) {
-	// Creating a Redis connection for each request is a poor design, but is okay for this
-	// stage of development.  Refactor so that a single connection is used by all requests.
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     "drl-redis:6379",
-		Password: "",
-		DB:       0,
-		Protocol: 2,
-	})
-	defer rdb.Close()
+// SlidingWindow is the representation for a sliding window rate limiter.
+type SlidingWindow struct {
+	db *storage.Storage
+}
 
-	ctx := context.Background()
-	val, err := rdb.Ping(ctx).Result()
-	if err != nil {
-		return false, err
+// Init initializes the sliding window rate limiter using storage provider s.
+func Init(s *storage.Storage) *SlidingWindow {
+	return &SlidingWindow{
+		db: s,
 	}
+}
 
+// Allow reports whether a request from a client with clientId is within the rate limit.
+//
+// The rate limiting algorithm used is an approximation of a sliding window.  The algorithm
+// allows bursts of requests around the window boundary.
+func (sw SlidingWindow) Allow(clientId string) bool {
 	// Rate limiting algorithm is an approximation of a sliding window.  Set the TTL of
 	// the count of requests stored in Redis to the size of the window.  Redis will
 	// automatically expire the account.  This approach does allow bursts of requests
@@ -38,31 +36,20 @@ func Allow(clientId string) (bool, error) {
 	// Even worse, there is a race condition when multiple database connections are
 	// incrementing the count for a client ID.
 
-	val, err = rdb.Get(ctx, clientId).Result()
-	if err != nil && err != redis.Nil {
-		return false, err
-	}
-
-	var count int64
+	count, err := sw.db.GetCount(clientId)
 	if err != nil {
-		// client ID was not found in the database, set initial count
-		count = 0
-	} else {
-		count, err = strconv.ParseInt(val, 10, 64)
-		if err != nil {
-			// Fail safely if there is an error parsing the count from the database by
-			// setting the count to zero.
-			log.Println(err)
-			count = 0
-		}
+		// Fail open, allow the request if there is an error connecting to the database.
+		log.Println(err)
+		return true
 	}
 
 	count++
 
-	val, err = rdb.Set(ctx, clientId, count, 10*time.Second).Result()
+	err = sw.db.SetCount(clientId, count)
 	if err != nil {
-		return false, err
+		// Fail open, allow the request if there is an error connecting to the database.
+		return true
 	}
 
-	return count < 10, nil
+	return count < 10
 }
