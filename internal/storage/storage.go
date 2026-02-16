@@ -70,3 +70,24 @@ func (s *Storage) SetCount(clientId string, count int64) error {
 	_, err := s.redisDB.Set(s.redisCtx, clientId, count, 10*time.Second).Result()
 	return err
 }
+
+// incrScript is a Lua script executed in Redis the increments a key, and returns the updated count.
+// New keys are set to expire.
+var incrScript = redis.NewScript(`
+local count = redis.call('INCR', KEYS[1])
+if count == 1 then
+	redis.call('EXPIRE', KEYS[1], ARGV[1])
+end
+return count
+`)
+
+// IncrWithExpr increments the value for the clientId key by one, and sets the expiration to ttl for new keys.
+// The updated count for the key is returned.
+func (s *Storage) IncrWithExpr(clientId string, ttl time.Duration) (int64, error) {
+	count, err := incrScript.Run(s.redisCtx, s.redisDB, []string{clientId}, ttl.Seconds()).Int64()
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
