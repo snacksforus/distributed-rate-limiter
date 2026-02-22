@@ -7,19 +7,19 @@ import (
 	"net/http"
 
 	"github.com/snacksforus/distributed-rate-limiter/api/response"
-	"github.com/snacksforus/distributed-rate-limiter/internal/ratelimiter/slidingwindow"
+	"github.com/snacksforus/distributed-rate-limiter/internal/ratelimiter"
 	"github.com/snacksforus/distributed-rate-limiter/internal/storage"
 )
 
 // RateLimitMiddleware is the representation for a rate limiting middleware.
 type RateLimitMiddleware struct {
-	rateLimiter *slidingwindow.SlidingWindow
+	rateLimiter *ratelimiter.RateLimiter
 }
 
 // Init initializes the rate limiting middleware using storage provider s.
 func Init(s *storage.Storage, rateLimit int, windowSize int) *RateLimitMiddleware {
 	return &RateLimitMiddleware{
-		rateLimiter: slidingwindow.Init(s, rateLimit, windowSize),
+		rateLimiter: ratelimiter.New(s, rateLimit, windowSize),
 	}
 }
 
