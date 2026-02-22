@@ -17,9 +17,9 @@ type RateLimitMiddleware struct {
 }
 
 // Init initializes the rate limiting middleware using storage provider s.
-func Init(s *storage.Storage) *RateLimitMiddleware {
+func Init(s *storage.Storage, rateLimit int, windowSize int) *RateLimitMiddleware {
 	return &RateLimitMiddleware{
-		rateLimiter: slidingwindow.Init(s),
+		rateLimiter: slidingwindow.Init(s, rateLimit, windowSize),
 	}
 }
 

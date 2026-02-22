@@ -2,11 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/snacksforus/distributed-rate-limiter/api/response"
+	"github.com/snacksforus/distributed-rate-limiter/internal/config"
 	"github.com/snacksforus/distributed-rate-limiter/internal/middleware"
 	"github.com/snacksforus/distributed-rate-limiter/internal/storage"
 )
@@ -19,19 +21,27 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	db, err := storage.Init()
+	config, err := config.New()
+	if err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
+
+	db, err := storage.Init(config.RedisHostname, config.RedisPort, config.RedisPassword)
 	if err != nil {
 		log.Println(err)
 		os.Exit(1)
 	}
 	defer db.Close()
 
-	mw := middleware.Init(db)
+	mw := middleware.Init(db, config.RateLimit, config.WindowSizeSec)
 
 	// API has a single endpoint that just returns success.
 	http.Handle("/", mw.RateLimit(http.HandlerFunc(handler)))
 
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	addr := fmt.Sprintf("%s:%d", config.Hostname, config.Port)
+	log.Println("serving on", addr)
+	if err := http.ListenAndServe(addr, nil); err != nil {
 		log.Fatal(err)
 	}
 }

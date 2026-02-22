@@ -11,13 +11,17 @@ import (
 
 // SlidingWindow is the representation for a sliding window rate limiter.
 type SlidingWindow struct {
-	db *storage.Storage
+	db         *storage.Storage
+	rateLimit  int
+	windowSize int
 }
 
 // Init initializes the sliding window rate limiter using storage provider s.
-func Init(s *storage.Storage) *SlidingWindow {
+func Init(s *storage.Storage, rateLimit int, windowSize int) *SlidingWindow {
 	return &SlidingWindow{
-		db: s,
+		db:         s,
+		rateLimit:  rateLimit,
+		windowSize: windowSize,
 	}
 }
 
@@ -31,7 +35,8 @@ func (sw SlidingWindow) Allow(clientId string) bool {
 	// allow bursts of requests at the window boundary, but this is an acceptable tradeoff for the ease of
 	// implementation.
 
-	count, err := sw.db.IncrWithExpr(clientId, 10*time.Second)
+	expr := time.Duration(sw.windowSize) * time.Second
+	count, err := sw.db.IncrWithExpr(clientId, expr)
 	if err != nil {
 		log.Println(err)
 		// Fail open, allow the request if there is an error connecting to the database.
