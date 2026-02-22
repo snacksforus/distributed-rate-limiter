@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -27,9 +28,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	db, err := storage.Init(config.RedisHostname, config.RedisPort, config.RedisPassword)
+	db, err := storage.New(context.Background(), config.RedisHostname, config.RedisPort, config.RedisPassword)
 	if err != nil {
 		log.Println(err)
+		db.Close()
 		os.Exit(1)
 	}
 	defer db.Close()

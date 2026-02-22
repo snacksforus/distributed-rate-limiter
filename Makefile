@@ -12,8 +12,10 @@ lint:
 tidy:
 	go fmt ./...
 
+# docker compose run --rm test; EXIT=$$?; docker compose down; exit $$EXIT
 test:
-	go test -v -race -cover ./...
+	docker compose run --build --rm test
+	docker compose down
 
 run:
 	docker run --detach --name drl-redis --network drl-network --rm redis:latest

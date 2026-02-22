@@ -32,7 +32,7 @@ func (rlm *RateLimitMiddleware) RateLimit(next http.Handler) http.Handler {
 			panic(err)
 		}
 
-		allow := rlm.rateLimiter.Allow(clientId)
+		allow := rlm.rateLimiter.Allow(r.Context(), clientId)
 
 		if !allow {
 			w.WriteHeader(429)

@@ -3,8 +3,8 @@
 package slidingwindow
 
 import (
+	"context"
 	"log"
-	"time"
 
 	"github.com/snacksforus/distributed-rate-limiter/internal/storage"
 )
@@ -29,14 +29,13 @@ func Init(s *storage.Storage, rateLimit int, windowSize int) *SlidingWindow {
 //
 // The rate limiting algorithm used is an approximation of a sliding window.  The algorithm
 // allows bursts of requests around the window boundary.
-func (sw SlidingWindow) Allow(clientId string) bool {
+func (sw SlidingWindow) Allow(ctx context.Context, clientId string) bool {
 	// The rate limiting algorithm is an approximation of a sliding window.  The TTL of the count of requests for
 	// the clientId is the size of the window.  Redis will automatically expire the count.  This approach does
 	// allow bursts of requests at the window boundary, but this is an acceptable tradeoff for the ease of
 	// implementation.
 
-	expr := time.Duration(sw.windowSize) * time.Second
-	count, err := sw.db.IncrWithExpr(clientId, expr)
+	count, err := sw.db.IncrWithTTL(ctx, clientId, sw.windowSize)
 	if err != nil {
 		log.Println(err)
 		// Fail open, allow the request if there is an error connecting to the database.
