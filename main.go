@@ -36,10 +36,10 @@ func main() {
 	}
 	defer db.Close()
 
-	mw := middleware.Init(db, config.RateLimit, config.WindowSizeSec)
+	mw := middleware.New(db, config.RateLimit, config.WindowSizeSec)
 
 	// API has a single endpoint that just returns success.
-	http.Handle("/", mw.RateLimit(http.HandlerFunc(handler)))
+	http.Handle("/", mw.Handler(http.HandlerFunc(handler)))
 
 	addr := fmt.Sprintf("%s:%d", config.Hostname, config.Port)
 	log.Println("serving on", addr)

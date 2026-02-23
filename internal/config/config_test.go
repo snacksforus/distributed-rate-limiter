@@ -90,17 +90,17 @@ func TestConfiguration(t *testing.T) {
 			port:          strPtr("65536"),
 		},
 		{
-			name:          "Invalid RateLimit",
+			name:          "Invalid Handler",
 			expectedError: true,
 			rateLimit:     strPtr("not-a-number"),
 		},
 		{
-			name:          "Zero RateLimit",
+			name:          "Zero Handler",
 			expectedError: true,
 			rateLimit:     strPtr("0"),
 		},
 		{
-			name:          "Negative RateLimit",
+			name:          "Negative Handler",
 			expectedError: true,
 			rateLimit:     strPtr("-1"),
 		},
@@ -176,7 +176,7 @@ func TestConfiguration(t *testing.T) {
 				t.Errorf("expected Port %d got %d", test.expected.Port, result.Port)
 			}
 			if test.expected.RateLimit != result.RateLimit {
-				t.Errorf("expected RateLimit %d got %d", test.expected.RateLimit, result.RateLimit)
+				t.Errorf("expected Handler %d got %d", test.expected.RateLimit, result.RateLimit)
 			}
 			if test.expected.RedisPort != result.RedisPort {
 				t.Errorf("expected RedisPort %d got %d", test.expected.RedisPort, result.RedisPort)

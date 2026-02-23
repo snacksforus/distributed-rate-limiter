@@ -5,38 +5,43 @@ import (
 	"encoding/json"
 	"net"
 	"net/http"
+	"strconv"
 
 	"github.com/snacksforus/distributed-rate-limiter/api/response"
 	"github.com/snacksforus/distributed-rate-limiter/internal/ratelimiter"
 	"github.com/snacksforus/distributed-rate-limiter/internal/storage"
 )
 
-// RateLimitMiddleware is the representation for a rate limiting middleware.
-type RateLimitMiddleware struct {
-	rateLimiter *ratelimiter.RateLimiter
+// RateLimit is the representation for a rate limiting middleware.
+type RateLimit struct {
+	rateLimiter   *ratelimiter.RateLimiter
+	windowSizeSec int
 }
 
-// Init initializes the rate limiting middleware using storage provider s.
-func Init(s *storage.Storage, rateLimit int, windowSize int) *RateLimitMiddleware {
-	return &RateLimitMiddleware{
-		rateLimiter: ratelimiter.New(s, rateLimit, windowSize),
+// New initializes the rate limiting middleware using storage s, with a limit of rateLimit,
+// and a window size of windowSizeSec seconds.
+func New(s *storage.Storage, rateLimit int, windowSizeSec int) *RateLimit {
+	return &RateLimit{
+		rateLimiter:   ratelimiter.New(s, rateLimit, windowSizeSec),
+		windowSizeSec: windowSizeSec,
 	}
 }
 
-// RateLimit limits the rate of requests from a client.
-func (rlm *RateLimitMiddleware) RateLimit(next http.Handler) http.Handler {
+// Handler limits the rate of requests from a client.
+func (rlm *RateLimit) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		clientId, _, err := net.SplitHostPort(r.RemoteAddr)
+		clientID, _, err := net.SplitHostPort(r.RemoteAddr)
 		if err != nil {
 			// Errors parsing the remote address are considered programmer errors.
 			panic(err)
 		}
 
-		allow := rlm.rateLimiter.Allow(r.Context(), clientId)
+		allow := rlm.rateLimiter.Allow(r.Context(), clientID)
 
 		if !allow {
-			w.WriteHeader(429)
 			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Retry-After", strconv.Itoa(rlm.windowSizeSec))
+			w.WriteHeader(http.StatusTooManyRequests)
 			resp := response.Error("TOO_MANY_REQUESTS", "Exceeded request rate limit")
 			data, _ := json.Marshal(resp)
 			_, _ = w.Write(data)
