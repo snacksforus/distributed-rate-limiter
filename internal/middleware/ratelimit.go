@@ -32,8 +32,8 @@ func (rlm *RateLimit) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		clientID, _, err := net.SplitHostPort(r.RemoteAddr)
 		if err != nil {
-			// Errors parsing the remote address are considered programmer errors.
-			panic(err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
 		}
 
 		allow := rlm.rateLimiter.Allow(r.Context(), clientID)
