@@ -29,7 +29,7 @@ COPY cmd ./cmd/
 COPY api ./api/
 COPY internal ./internal/
 
-RUN go build -o api-server main.go
+RUN go build -o api-server cmd/main.go
 
 FROM alpine:latest
 
