@@ -14,7 +14,7 @@ import (
 
 // RateLimit is the representation for a rate limiting middleware.
 type RateLimit struct {
-	rateLimiter   *ratelimiter.RateLimiter
+	rateLimiter   *ratelimiter.Limiter
 	windowSizeSec int
 }
 

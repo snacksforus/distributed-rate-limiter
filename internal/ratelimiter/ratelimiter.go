@@ -8,16 +8,16 @@ import (
 	"github.com/snacksforus/distributed-rate-limiter/internal/storage"
 )
 
-// RateLimiter is the representation for a fixed window rate limiter.
-type RateLimiter struct {
+// Limiter is the representation for a fixed window rate limiter.
+type Limiter struct {
 	store         *storage.Storage
 	rateLimit     int
 	windowSizeSec int
 }
 
 // New initializes the fixed window rate limiter using storage provider s.
-func New(s *storage.Storage, rateLimit int, windowSizeSec int) *RateLimiter {
-	return &RateLimiter{
+func New(s *storage.Storage, rateLimit int, windowSizeSec int) *Limiter {
+	return &Limiter{
 		store:         s,
 		rateLimit:     rateLimit,
 		windowSizeSec: windowSizeSec,
@@ -28,12 +28,12 @@ func New(s *storage.Storage, rateLimit int, windowSizeSec int) *RateLimiter {
 //
 // The rate limiting algorithm used is a fixed window which allows bursts of requests
 // around the window boundary.
-func (rl *RateLimiter) Allow(ctx context.Context, clientID string) bool {
-	count, err := rl.store.IncrWithTTL(ctx, clientID, rl.windowSizeSec)
+func (l *Limiter) Allow(ctx context.Context, clientID string) bool {
+	count, err := l.store.IncrWithTTL(ctx, clientID, l.windowSizeSec)
 	if err != nil {
 		// Fail open, allow the request if there is an error connecting to the database.
 		return true
 	}
 
-	return count <= rl.rateLimit
+	return count <= l.rateLimit
 }
