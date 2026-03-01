@@ -49,7 +49,7 @@ func (rlm *RateLimit) Handler(next http.Handler) http.Handler {
 			var data []byte
 			data, err = json.Marshal(resp)
 			if err != nil {
-				http.Error(w, "Internal Server NewError", http.StatusInternalServerError)
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 				return
 			}
 			_, _ = w.Write(data)
