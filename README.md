@@ -83,7 +83,6 @@ All configuration is provided via environment variables.
 ### Start
 
 ```bash
-make build-network   # create the drl-network Docker network (first time only)
 make run             # start Redis and the API server
 ```
 
@@ -103,7 +102,7 @@ curl http://localhost:8080/api
 
 **200 OK — request allowed:**
 ```json
-{"success":true,"error":null}
+{"success":true}
 ```
 
 **429 Too Many Requests — rate limit exceeded:**
@@ -118,3 +117,15 @@ Tests run inside Docker and require a live Redis instance, which Docker Compose 
 ```bash
 make test
 ```
+
+## TODO
+
+- [ ] add GitHub CI pipeline
+- [ ] add observability
+- [ ] add HTTP rate limit headers
+- [ ] additional rate limit algorithms: sliding window and token bucket
+- [ ] update Retry-After to return remaining window
+- [ ] add health check endpoint
+- [ ] add request logging middleware
+- [ ] add support for API based client key
+- [ ] increase middleware test coverage
