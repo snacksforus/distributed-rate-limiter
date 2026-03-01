@@ -4,7 +4,6 @@ package storage
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -36,35 +35,6 @@ func New(ctx context.Context, hostname string, port int, password string) (*Stor
 // Close closes the connection to the database.
 func (s *Storage) Close() error {
 	return s.redisDB.Close()
-}
-
-// GetCount returns the count value for the clientID key.  A SetCount followed by a GetCount is
-// not an atomic operation.
-func (s *Storage) GetCount(ctx context.Context, clientID string) (int, error) {
-	val, err := s.redisDB.Get(ctx, clientID).Result()
-
-	if err == redis.Nil {
-		// clientID was not found in the database, return initial count
-		return 0, nil
-	}
-	if err != nil {
-		return 0, err
-	}
-
-	var count int
-	count, err = strconv.Atoi(val)
-	if err != nil {
-		return 0, fmt.Errorf("error parsing key for clientId %v: %w", clientID, err)
-	}
-
-	return count, nil
-}
-
-// SetCount sets the value for the clientID key to count.  The clientID key has no expiration.
-// A SetCount followed by a GetCount is not an atomic operation.
-func (s *Storage) SetCount(ctx context.Context, clientID string, count int) error {
-	_, err := s.redisDB.Set(ctx, clientID, count, 0).Result()
-	return err
 }
 
 // incrScript is a Lua script executed in Redis that increments a key and returns the updated count.

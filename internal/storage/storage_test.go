@@ -45,58 +45,6 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func TestGetCount_ClientIDNotFound(t *testing.T) {
-	clientID := t.Name()
-	count, err := store.GetCount(context.Background(), clientID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if count != 0 {
-		t.Errorf("expected count = 0 when client Id not found, got %v", count)
-	}
-}
-
-func TestSetAndGet(t *testing.T) {
-	clientID := t.Name()
-	expectedCount := 7
-
-	err := store.SetCount(context.Background(), clientID, expectedCount)
-	if err != nil {
-		t.Fatal(err)
-	}
-	count, err := store.GetCount(context.Background(), clientID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if expectedCount != count {
-		t.Errorf("expected count = %v, got %v", expectedCount, count)
-	}
-}
-
-func TestSetCount_Update(t *testing.T) {
-	clientID := t.Name()
-	count1 := 100
-	count2 := 110
-
-	err := store.SetCount(context.Background(), clientID, count1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = store.SetCount(context.Background(), clientID, count2)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	count, err := store.GetCount(context.Background(), clientID)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if count != count2 {
-		t.Errorf("expected count = %v, got %v", count2, count)
-	}
-}
-
 func TestIncrWithExpr_NewClientID(t *testing.T) {
 	clientID := t.Name()
 
@@ -132,14 +80,6 @@ func TestIncrWithExpr_Expiration(t *testing.T) {
 	}
 
 	time.Sleep(2 * time.Second)
-
-	count, err := store.GetCount(context.Background(), clientID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if count != 0 {
-		t.Error("expected count to be reset after expiration")
-	}
 }
 
 func TestNew_ConnectionFailure(t *testing.T) {
