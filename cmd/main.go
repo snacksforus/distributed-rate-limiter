@@ -37,8 +37,8 @@ func main() {
 	// Start the server in a goroutine so that it doesn't block.
 	go func() {
 		slog.Info("serving on", "addr", server.Addr)
-		if err = server.ListenAndServe(); err != http.ErrServerClosed {
-			slog.Error("HTTP server failure", "error", err)
+		if serverErr := server.ListenAndServe(); serverErr != http.ErrServerClosed {
+			slog.Error("HTTP server failure", "error", serverErr)
 		}
 	}()
 
