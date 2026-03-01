@@ -39,7 +39,6 @@ func main() {
 		slog.Info("serving on", "addr", server.Addr)
 		if err = server.ListenAndServe(); err != http.ErrServerClosed {
 			slog.Error("HTTP server failure", "error", err)
-			os.Exit(1)
 		}
 	}()
 
