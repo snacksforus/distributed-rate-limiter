@@ -35,6 +35,9 @@ func TestHandlers_Get(t *testing.T) {
 }
 
 func TestHandlers_MethodNotAllowed(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /api", handler)
+
 	for _, method := range []string{
 		http.MethodPost,
 		http.MethodPut,
@@ -45,7 +48,7 @@ func TestHandlers_MethodNotAllowed(t *testing.T) {
 			req := httptest.NewRequest(method, "/api", nil)
 			w := httptest.NewRecorder()
 
-			handler(w, req)
+			mux.ServeHTTP(w, req)
 
 			if w.Code != http.StatusMethodNotAllowed {
 				t.Errorf("expected status 405, got %d", w.Code)

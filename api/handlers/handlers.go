@@ -16,11 +16,6 @@ import (
 // handler handles HTTP Get requests for the demo API endpoint, returns a JSON
 // success message.
 func handler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	resp := response.Success()
 	data, err := json.Marshal(resp)
 	if err != nil {
@@ -41,7 +36,7 @@ func NewServer(store *storage.Storage, config *config.Config) *http.Server {
 	apiHandler := mw.Handler(http.HandlerFunc(handler))
 
 	mux := http.NewServeMux()
-	mux.Handle("/api", http.TimeoutHandler(apiHandler, timeout, "request timed out"))
+	mux.Handle("GET /api", http.TimeoutHandler(apiHandler, timeout, "request timed out"))
 
 	server := &http.Server{
 		Addr:              fmt.Sprintf("%s:%d", config.Hostname, config.Port),
