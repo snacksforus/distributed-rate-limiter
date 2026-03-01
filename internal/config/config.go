@@ -15,23 +15,23 @@ type Config struct {
 	RedisHostname       string // Hostname for Redis server
 	RedisPassword       string // Password for Redis server
 	Port                int    // Port for API server
-	RateLimit           int    // Maximum number of requests within the sliding window
+	RateLimit           int    // Maximum number of requests within the fixed window
 	RedisPort           int    // Port for Redis server
 	ReadHeaderTimeoutMS int    // HTTP request read header timeout in millisecond
 	ReadTimeoutMS       int    // HTTP request timeout in milliseconds
 	TimeoutMS           int    // HTTP request timeout in milliseconds
-	WindowSizeSec       int    // Duration of the sliding window in seconds
+	WindowSizeSec       int    // Duration of the fixed window in seconds
 }
 
 // New returns the configuration for the distributed rate limiting application.  The
 // configuration is set using the following environment variables:
 //   - DRL_HOSTNAME: Hostname for the API server
 //   - DRL_PORT: Port for the API server
-//   - DRL_RATE_LIMIT: Maximum number of requests within the sliding window
+//   - DRL_RATE_LIMIT: Maximum number of requests within the fixed window
 //   - DRL_REDIS_HOSTNAME: Hostname for Redis server
 //   - DRL_REDIS_PASSWORD: Password for Redis server
 //   - DRL_REDIS_PORT: Port for Redis server
-//   - DRL_WINDOW_SIZE_SEC: Duration of the sliding window in seconds
+//   - DRL_WINDOW_SIZE_SEC: Duration of the fixed window in seconds
 //   - DRL_READ_HEADER_TIMEOUT_MS: HTTP read request header timeout in milliseconds
 //   - DRL_READ_TIMEOUT_MS: HTTP read request timeout in milliseconds
 //   - DRL_TIMEOUT_MS: HTTP response timeout in milliseconds
