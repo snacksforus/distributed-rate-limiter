@@ -11,7 +11,7 @@ func TestResponse(t *testing.T) {
 	})
 
 	t.Run("error response", func(t *testing.T) {
-		resp := Error("TEST", "test message")
+		resp := NewError("TEST", "test message")
 		if resp.Success != false {
 			t.Error("expected false success in response")
 		}

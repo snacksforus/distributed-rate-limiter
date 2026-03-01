@@ -35,7 +35,7 @@ func (rlm *RateLimit) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		clientID, _, err := net.SplitHostPort(r.RemoteAddr)
 		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			http.Error(w, "Internal Server NewError", http.StatusInternalServerError)
 			return
 		}
 
@@ -45,11 +45,11 @@ func (rlm *RateLimit) Handler(next http.Handler) http.Handler {
 			w.Header().Set("Content-Type", "application/json")
 			w.Header().Set("Retry-After", strconv.Itoa(rlm.windowSizeSec))
 			w.WriteHeader(http.StatusTooManyRequests)
-			resp := response.Error("TOO_MANY_REQUESTS", "Exceeded request rate limit")
+			resp := response.NewError("TOO_MANY_REQUESTS", "Exceeded request rate limit")
 			var data []byte
 			data, err = json.Marshal(resp)
 			if err != nil {
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				http.Error(w, "Internal Server NewError", http.StatusInternalServerError)
 				return
 			}
 			_, _ = w.Write(data)
