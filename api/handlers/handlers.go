@@ -2,26 +2,15 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/snacksforus/distributed-rate-limiter/api/response"
 	"github.com/snacksforus/distributed-rate-limiter/internal/config"
 	"github.com/snacksforus/distributed-rate-limiter/internal/middleware"
 	"github.com/snacksforus/distributed-rate-limiter/internal/storage"
 )
-
-// Register registers the demo API and middleware HTTP handlers.
-func Register(store *storage.Storage, config *config.Config) {
-	if store == nil || config == nil {
-		// A nil store or config is considered a programmer error.
-		panic("missing Register parameter")
-	}
-
-	mw := middleware.New(store, config.RateLimit, config.WindowSizeSec)
-
-	// Demo API has a single endpoint that just returns success.
-	http.Handle("/api", mw.Handler(http.HandlerFunc(handler)))
-}
 
 // handler handles HTTP Get requests for the demo API endpoint, returns a JSON
 // success message.
@@ -35,4 +24,25 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	data, _ := json.Marshal(resp)
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(data)
+}
+
+// NewServer returns an HTTP server configured using config and backed with the store storage provider.
+// The demo API and rate limiting middleware handlers are registered with the server.
+func NewServer(store *storage.Storage, config *config.Config) *http.Server {
+	timeout := time.Duration(config.TimeoutMS) * time.Millisecond
+
+	mw := middleware.New(store, config.RateLimit, config.WindowSizeSec)
+	apiHandler := mw.Handler(http.HandlerFunc(handler))
+
+	mux := http.NewServeMux()
+	mux.Handle("/api", http.TimeoutHandler(apiHandler, timeout, "request timed out"))
+
+	server := &http.Server{
+		Addr:              fmt.Sprintf("%s:%d", config.Hostname, config.Port),
+		ReadHeaderTimeout: time.Duration(config.ReadHeaderTimeoutMS) * time.Millisecond,
+		ReadTimeout:       time.Duration(config.ReadTimeoutMS) * time.Millisecond,
+		Handler:           mux,
+	}
+
+	return server
 }

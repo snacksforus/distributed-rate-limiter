@@ -11,13 +11,16 @@ import (
 
 // A Config encapsulates the configuration options for the application.
 type Config struct {
-	Hostname      string // Hostname for API server
-	RedisHostname string // Hostname for Redis server
-	RedisPassword string // Password for Redis server
-	Port          int    // Port for API server
-	RateLimit     int    // Maximum number of requests within the sliding window
-	RedisPort     int    // Port for Redis server
-	WindowSizeSec int    // Duration of the sliding window in seconds
+	Hostname            string // Hostname for API server
+	RedisHostname       string // Hostname for Redis server
+	RedisPassword       string // Password for Redis server
+	Port                int    // Port for API server
+	RateLimit           int    // Maximum number of requests within the sliding window
+	RedisPort           int    // Port for Redis server
+	ReadHeaderTimeoutMS int    // HTTP request read header timeout in millisecond
+	ReadTimeoutMS       int    // HTTP request timeout in milliseconds
+	TimeoutMS           int    // HTTP request timeout in milliseconds
+	WindowSizeSec       int    // Duration of the sliding window in seconds
 }
 
 // New returns the configuration for the distributed rate limiting application.  The
@@ -29,6 +32,9 @@ type Config struct {
 //   - DRL_REDIS_PASSWORD: Password for Redis server
 //   - DRL_REDIS_PORT: Port for Redis server
 //   - DRL_WINDOW_SIZE_SEC: Duration of the sliding window in seconds
+//   - DRL_READ_HEADER_TIMEOUT_MS: HTTP read request header timeout in milliseconds
+//   - DRL_READ_TIMEOUT_MS: HTTP read request timeout in milliseconds
+//   - DRL_TIMEOUT_MS: HTTP response timeout in milliseconds
 func New() (*Config, error) {
 	var err error
 	var errs []error
@@ -50,6 +56,18 @@ func New() (*Config, error) {
 		errs = append(errs, err)
 	}
 	c.WindowSizeSec, err = getInt("DRL_WINDOW_SIZE_SEC", 10)
+	if err != nil {
+		errs = append(errs, err)
+	}
+	c.ReadHeaderTimeoutMS, err = getInt("DRL_READ_HEADER_TIMEOUT_MS", 500)
+	if err != nil {
+		errs = append(errs, err)
+	}
+	c.ReadTimeoutMS, err = getInt("DRL_READ_TIMEOUT_MS", 500)
+	if err != nil {
+		errs = append(errs, err)
+	}
+	c.TimeoutMS, err = getInt("DRL_TIMEOUT_MS", 1000)
 	if err != nil {
 		errs = append(errs, err)
 	}
@@ -82,6 +100,18 @@ func validate(c *Config) error {
 	}
 	if c.WindowSizeSec <= 0 {
 		errs = append(errs, errors.New("DRL_WINDOW_SIZE_SEC must be greater than zero"))
+	}
+	if c.ReadHeaderTimeoutMS <= 0 {
+		errs = append(errs, errors.New("DRL_READ_HEADER_TIMEOUT_MS must be greater than zero"))
+	}
+	if c.ReadTimeoutMS <= 0 {
+		errs = append(errs, errors.New("DRL_READ_TIMEOUT_MS must be greater than zero"))
+	}
+	if c.TimeoutMS <= 0 {
+		errs = append(errs, errors.New("DRL_TIMEOUT_MS must be greater than zero"))
+	}
+	if c.ReadHeaderTimeoutMS > c.ReadTimeoutMS {
+		errs = append(errs, errors.New("DRL_READ_TIMEOUT_MS must be equal to or greater than DRL_READ_HEADER_TIMEOUT_MS"))
 	}
 
 	return errors.Join(errs...)

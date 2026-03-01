@@ -9,23 +9,29 @@ var envKeys = []string{
 	"DRL_HOSTNAME",
 	"DRL_PORT",
 	"DRL_RATE_LIMIT",
+	"DRL_READ_HEADER_TIMEOUT_MS",
+	"DRL_READ_TIMEOUT_MS",
 	"DRL_REDIS_HOSTNAME",
 	"DRL_REDIS_PASSWORD",
 	"DRL_REDIS_PORT",
+	"DRL_TIMEOUT_MS",
 	"DRL_WINDOW_SIZE_SEC",
 }
 
 type testCase struct {
-	name          string
-	expectedError bool
-	hostname      *string
-	port          *string
-	rateLimit     *string
-	redisHostname *string
-	redisPassword *string
-	redisPort     *string
-	windowSizeSec *string
-	expected      *Config
+	name                string
+	expectedError       bool
+	hostname            *string
+	port                *string
+	rateLimit           *string
+	readHeaderTimeoutMS *string
+	readTimeoutMS       *string
+	redisHostname       *string
+	redisPassword       *string
+	redisPort           *string
+	timeoutMS           *string
+	windowSizeSec       *string
+	expected            *Config
 }
 
 func TestConfiguration(t *testing.T) {
@@ -39,34 +45,43 @@ func TestConfiguration(t *testing.T) {
 
 	tests := []testCase{
 		{
-			name:          "All Settings Valid",
-			hostname:      strPtr("test-host"),
-			port:          strPtr("8080"),
-			rateLimit:     strPtr("10"),
-			redisHostname: strPtr("test-redis-host"),
-			redisPassword: strPtr("testpassword"),
-			redisPort:     strPtr("6767"),
-			windowSizeSec: strPtr("3"),
+			name:                "All Settings Valid",
+			hostname:            strPtr("test-host"),
+			port:                strPtr("8080"),
+			rateLimit:           strPtr("10"),
+			readHeaderTimeoutMS: strPtr("250"),
+			readTimeoutMS:       strPtr("300"),
+			redisHostname:       strPtr("test-redis-host"),
+			redisPassword:       strPtr("testpassword"),
+			redisPort:           strPtr("6767"),
+			timeoutMS:           strPtr("500"),
+			windowSizeSec:       strPtr("3"),
 			expected: &Config{
-				Hostname:      "test-host",
-				RedisHostname: "test-redis-host",
-				RedisPassword: "testpassword",
-				Port:          8080,
-				RateLimit:     10,
-				RedisPort:     6767,
-				WindowSizeSec: 3,
+				Hostname:            "test-host",
+				RedisHostname:       "test-redis-host",
+				RedisPassword:       "testpassword",
+				Port:                8080,
+				RateLimit:           10,
+				ReadHeaderTimeoutMS: 250,
+				ReadTimeoutMS:       300,
+				RedisPort:           6767,
+				TimeoutMS:           500,
+				WindowSizeSec:       3,
 			},
 		},
 		{
 			name: "Default Config",
 			expected: &Config{
-				Hostname:      "",
-				RedisHostname: "drl-redis",
-				RedisPassword: "",
-				Port:          8080,
-				RateLimit:     10,
-				RedisPort:     6379,
-				WindowSizeSec: 10,
+				Hostname:            "",
+				RedisHostname:       "drl-redis",
+				RedisPassword:       "",
+				Port:                8080,
+				RateLimit:           10,
+				ReadHeaderTimeoutMS: 500,
+				ReadTimeoutMS:       500,
+				RedisPort:           6379,
+				TimeoutMS:           1000,
+				WindowSizeSec:       10,
 			},
 		},
 		{
@@ -144,6 +159,21 @@ func TestConfiguration(t *testing.T) {
 			expectedError: true,
 			windowSizeSec: strPtr("-1"),
 		},
+		{
+			name:                "Invalid ReadHeaderTimeoutMS",
+			expectedError:       true,
+			readHeaderTimeoutMS: strPtr("not-a-number"),
+		},
+		{
+			name:          "Invalid ReadTimeoutMS",
+			expectedError: true,
+			readTimeoutMS: strPtr("not-a-number"),
+		},
+		{
+			name:          "Invalid TimeoutMS",
+			expectedError: true,
+			timeoutMS:     strPtr("not-a-number"),
+		},
 	}
 
 	for _, test := range tests {
@@ -184,6 +214,15 @@ func TestConfiguration(t *testing.T) {
 			if test.expected.WindowSizeSec != result.WindowSizeSec {
 				t.Errorf("expected WindowSizeSec %d got %d", test.expected.WindowSizeSec, result.WindowSizeSec)
 			}
+			if test.expected.ReadHeaderTimeoutMS != result.ReadHeaderTimeoutMS {
+				t.Errorf("expected ReadHeaderTimeoutMS %d got %d", test.expected.ReadHeaderTimeoutMS, result.ReadHeaderTimeoutMS)
+			}
+			if test.expected.ReadTimeoutMS != result.ReadTimeoutMS {
+				t.Errorf("expected ReadTimeoutMS %d got %d", test.expected.ReadTimeoutMS, result.ReadTimeoutMS)
+			}
+			if test.expected.TimeoutMS != result.TimeoutMS {
+				t.Errorf("expected TimeoutMS %d got %d", test.expected.TimeoutMS, result.TimeoutMS)
+			}
 		})
 	}
 }
@@ -198,6 +237,12 @@ func setEnv(td *testCase, t *testing.T) {
 	if td.rateLimit != nil {
 		t.Setenv("DRL_RATE_LIMIT", *td.rateLimit)
 	}
+	if td.readHeaderTimeoutMS != nil {
+		t.Setenv("DRL_READ_HEADER_TIMEOUT_MS", *td.readHeaderTimeoutMS)
+	}
+	if td.readTimeoutMS != nil {
+		t.Setenv("DRL_READ_TIMEOUT_MS", *td.readTimeoutMS)
+	}
 	if td.redisHostname != nil {
 		t.Setenv("DRL_REDIS_HOSTNAME", *td.redisHostname)
 	}
@@ -206,6 +251,9 @@ func setEnv(td *testCase, t *testing.T) {
 	}
 	if td.redisPort != nil {
 		t.Setenv("DRL_REDIS_PORT", *td.redisPort)
+	}
+	if td.timeoutMS != nil {
+		t.Setenv("DRL_TIMEOUT_MS", *td.timeoutMS)
 	}
 	if td.windowSizeSec != nil {
 		t.Setenv("DRL_WINDOW_SIZE_SEC", *td.windowSizeSec)
