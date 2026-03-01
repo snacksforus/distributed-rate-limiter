@@ -52,6 +52,5 @@ func main() {
 
 	if err = server.Shutdown(shutdownCtx); err != nil {
 		slog.Error("failed to shutdown HTTP server", "error", err)
-		os.Exit(1)
 	}
 }
