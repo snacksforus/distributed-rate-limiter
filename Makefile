@@ -1,10 +1,7 @@
-.PHONY: build build-network lint tidy test run stop
+.PHONY: build lint tidy test run stop
 
 build:
 	docker build -t drl-api-server .
-
-build-network:
-	docker network create drl-network
 
 lint:
 	go vet ./...
@@ -14,14 +11,12 @@ tidy:
 
 # The integration test is run separately from the unit tests because it flushes the Redis cache.
 test:
-	docker compose run --build --rm test
-	docker compose run --rm integration-test
-	docker compose down
+	docker compose -f docker-compose.test.yml run --build --rm test
+	docker compose -f docker-compose.test.yml run --rm integration-test
+	docker compose -f docker-compose.test.yml down
 
 run:
-	docker run --detach --name drl-redis --network drl-network --rm redis:latest
-	docker run --detach --name drl-api-server --network drl-network --publish 8080:8080 --rm drl-api-server
+	docker compose up --build -d
 
 stop:
-	docker stop drl-api-server
-	docker stop drl-redis
+	docker compose down

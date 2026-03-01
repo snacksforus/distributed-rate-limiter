@@ -1,47 +1,27 @@
 services:
   redis:
     image: redis:latest
-    container_name: drl-redis-test
-    hostname: drl-redis-test
+    container_name: drl-redis
+    hostname: drl-redis
     networks:
-      - drl-network-test
+      - drl-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 1s
       timeout: 3s
       retries: 10
 
-  test:
-    container_name: drl-api-server-test
-    hostname: drl-api-server-test
+  app:
+    container_name: drl-api-server
     build:
       context: .
-      target: test
+    ports:
+      - "8080:8080"
     networks:
-      - drl-network-test
-    environment:
-      DRL_REDIS_HOSTNAME: drl-redis-test
-      DRL_REDIS_PORT: 6379
-      DRL_REDIS_PASSWORD: ""
-    depends_on:
-      redis:
-        condition: service_healthy
-
-  integration-test:
-    container_name: drl-api-server-integration-test
-    hostname: drl-api-server-integration-test
-    build:
-      context: .
-      target: integration-test
-    networks:
-      - drl-network-test
-    environment:
-      DRL_REDIS_HOSTNAME: drl-redis-test
-      DRL_REDIS_PORT: 6379
-      DRL_REDIS_PASSWORD: ""
+      - drl-network
     depends_on:
       redis:
         condition: service_healthy
 
 networks:
-  drl-network-test:
+  drl-network:
