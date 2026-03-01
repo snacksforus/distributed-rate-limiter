@@ -45,7 +45,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func TestIncrWithExpr_NewClientID(t *testing.T) {
+func TestIncrWithTTL_NewClientID(t *testing.T) {
 	clientID := t.Name()
 
 	count, err := store.IncrWithTTL(context.Background(), clientID, 3)
@@ -57,7 +57,7 @@ func TestIncrWithExpr_NewClientID(t *testing.T) {
 	}
 }
 
-func TestIncrWithExpr_Increment(t *testing.T) {
+func TestIncrWithTTL_Increment(t *testing.T) {
 	clientID := t.Name()
 
 	for i := 1; i <= 10; i++ {
@@ -71,7 +71,7 @@ func TestIncrWithExpr_Increment(t *testing.T) {
 	}
 }
 
-func TestIncrWithExpr_Expiration(t *testing.T) {
+func TestIncrWithTTL_Expiration(t *testing.T) {
 	clientID := t.Name()
 
 	_, err := store.IncrWithTTL(context.Background(), clientID, 1)
@@ -80,6 +80,14 @@ func TestIncrWithExpr_Expiration(t *testing.T) {
 	}
 
 	time.Sleep(2 * time.Second)
+
+	count, err := store.IncrWithTTL(context.Background(), clientID, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 1 {
+		t.Errorf("expected count = 1 after expiration, got %v", count)
+	}
 }
 
 func TestNew_ConnectionFailure(t *testing.T) {
