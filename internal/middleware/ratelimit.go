@@ -2,27 +2,30 @@
 package middleware
 
 import (
+	"context"
 	"encoding/json"
 	"net"
 	"net/http"
 	"strconv"
 
 	"github.com/snacksforus/distributed-rate-limiter/api/response"
-	"github.com/snacksforus/distributed-rate-limiter/internal/ratelimiter"
-	"github.com/snacksforus/distributed-rate-limiter/internal/storage"
 )
 
 // RateLimit is the representation for a rate limiting middleware.
 type RateLimit struct {
-	rateLimiter   *ratelimiter.Limiter
+	allower       Allower
 	windowSizeSec int
 }
 
-// New initializes the rate limiting middleware using storage s, with a limit of rateLimit,
-// and a window size of windowSizeSec seconds.
-func New(s *storage.Storage, rateLimit int, windowSizeSec int) *RateLimit {
+type Allower interface {
+	Allow(context.Context, string) bool
+}
+
+// New initializes the rate limiting middleware using Allower a and a window size of
+// windowSizeSec seconds.
+func New(a Allower, windowSizeSec int) *RateLimit {
 	return &RateLimit{
-		rateLimiter:   ratelimiter.New(s, rateLimit, windowSizeSec),
+		allower:       a,
 		windowSizeSec: windowSizeSec,
 	}
 }
@@ -36,7 +39,7 @@ func (rlm *RateLimit) Handler(next http.Handler) http.Handler {
 			return
 		}
 
-		allow := rlm.rateLimiter.Allow(r.Context(), clientID)
+		allow := rlm.allower.Allow(r.Context(), clientID)
 
 		if !allow {
 			w.Header().Set("Content-Type", "application/json")

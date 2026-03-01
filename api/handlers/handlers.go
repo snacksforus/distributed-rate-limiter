@@ -10,6 +10,7 @@ import (
 	"github.com/snacksforus/distributed-rate-limiter/api/response"
 	"github.com/snacksforus/distributed-rate-limiter/internal/config"
 	"github.com/snacksforus/distributed-rate-limiter/internal/middleware"
+	"github.com/snacksforus/distributed-rate-limiter/internal/ratelimiter"
 	"github.com/snacksforus/distributed-rate-limiter/internal/storage"
 )
 
@@ -32,7 +33,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 func NewServer(store *storage.Storage, config *config.Config) *http.Server {
 	timeout := time.Duration(config.TimeoutMS) * time.Millisecond
 
-	mw := middleware.New(store, config.RateLimit, config.WindowSizeSec)
+	rl := ratelimiter.New(store, config.RateLimit, config.WindowSizeSec)
+	mw := middleware.New(rl, config.WindowSizeSec)
 	apiHandler := mw.Handler(http.HandlerFunc(handler))
 
 	mux := http.NewServeMux()
