@@ -6,19 +6,19 @@ import (
 	"context"
 )
 
-type counter interface {
+type Counter interface {
 	IncrWithTTL(context.Context, string, int) (int, error)
 }
 
 // Limiter is the representation for a fixed window rate limiter.
 type Limiter struct {
-	counter       counter
+	counter       Counter
 	rateLimit     int
 	windowSizeSec int
 }
 
 // New initializes the fixed window rate limiter using storage provider s.
-func New(c counter, rateLimit int, windowSizeSec int) *Limiter {
+func New(c Counter, rateLimit int, windowSizeSec int) *Limiter {
 	return &Limiter{
 		counter:       c,
 		rateLimit:     rateLimit,

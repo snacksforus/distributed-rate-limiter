@@ -11,7 +11,6 @@ import (
 	"github.com/snacksforus/distributed-rate-limiter/internal/config"
 	"github.com/snacksforus/distributed-rate-limiter/internal/middleware"
 	"github.com/snacksforus/distributed-rate-limiter/internal/ratelimiter"
-	"github.com/snacksforus/distributed-rate-limiter/internal/storage"
 )
 
 // handler handles HTTP Get requests for the demo API endpoint, returns a JSON
@@ -28,12 +27,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(data)
 }
 
-// NewServer returns an HTTP server configured using config and backed with the store storage provider.
+// NewServer returns an HTTP server configured using config and backed with the counter request counter.
 // The demo API and rate limiting middleware handlers are registered with the server.
-func NewServer(store *storage.Storage, config *config.Config) *http.Server {
+func NewServer(counter ratelimiter.Counter, config *config.Config) *http.Server {
 	timeout := time.Duration(config.TimeoutMS) * time.Millisecond
 
-	rl := ratelimiter.New(store, config.RateLimit, config.WindowSizeSec)
+	rl := ratelimiter.New(counter, config.RateLimit, config.WindowSizeSec)
 	mw := middleware.New(rl, config.WindowSizeSec)
 	apiHandler := mw.Handler(http.HandlerFunc(handler))
 
