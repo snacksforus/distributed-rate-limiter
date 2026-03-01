@@ -43,7 +43,12 @@ func (rlm *RateLimit) Handler(next http.Handler) http.Handler {
 			w.Header().Set("Retry-After", strconv.Itoa(rlm.windowSizeSec))
 			w.WriteHeader(http.StatusTooManyRequests)
 			resp := response.Error("TOO_MANY_REQUESTS", "Exceeded request rate limit")
-			data, _ := json.Marshal(resp)
+			var data []byte
+			data, err = json.Marshal(resp)
+			if err != nil {
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				return
+			}
 			_, _ = w.Write(data)
 			return
 		}
