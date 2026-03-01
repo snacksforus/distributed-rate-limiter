@@ -5,7 +5,7 @@ package ratelimiter_test
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"os"
 	"testing"
 	"time"
@@ -30,14 +30,16 @@ func TestMain(m *testing.M) {
 
 	conf, err = config.New()
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("failed to create configuration", "error", err)
+		os.Exit(1)
 	}
 
 	redis.SetLogger(noopLogger{})
 
 	store, err = storage.New(context.Background(), conf.RedisHostname, conf.RedisPort, conf.RedisPassword)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("failed to connect to Redis", "error", err)
+		os.Exit(1)
 	}
 
 	exitCode := m.Run()

@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,13 +17,13 @@ import (
 func main() {
 	config, err := config.New()
 	if err != nil {
-		log.Println(err)
+		slog.Error("failed to create configuration", "error", err)
 		os.Exit(1)
 	}
 
 	store, err := storage.New(context.Background(), config.RedisHostname, config.RedisPort, config.RedisPassword)
 	if err != nil {
-		log.Println(err)
+		slog.Error("failed to connect to Redis server", "error", err)
 		os.Exit(1)
 	}
 	defer store.Close()
@@ -36,9 +36,10 @@ func main() {
 
 	// Start the server in a goroutine so that it doesn't block.
 	go func() {
-		log.Println("serving on", server.Addr)
+		slog.Info("serving on", "addr", server.Addr)
 		if err = server.ListenAndServe(); err != http.ErrServerClosed {
-			log.Fatal(err)
+			slog.Error("HTTP server failure", "error", err)
+			os.Exit(1)
 		}
 	}()
 
@@ -51,6 +52,7 @@ func main() {
 	defer cancel()
 
 	if err = server.Shutdown(shutdownCtx); err != nil {
-		log.Fatal(err)
+		slog.Error("failed to shutdown HTTP server", "error", err)
+		os.Exit(1)
 	}
 }
