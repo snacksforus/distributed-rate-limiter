@@ -59,15 +59,18 @@ prevent the bursts of requests.
 
 All configuration is provided via environment variables.
 
-| Variable             | Default     | Description                          |
-|----------------------|-------------|--------------------------------------|
-| `DRL_HOSTNAME`       | empty       | API server bind hostname             |
-| `DRL_PORT`           | `8080`      | API server port (1–65535)            |
-| `DRL_RATE_LIMIT`     | `10`        | Max requests allowed per window      |
-| `DRL_WINDOW_SIZE_SEC`| `10`        | Window duration in seconds           |
-| `DRL_REDIS_HOSTNAME` | `drl-redis` | Redis hostname (required)            |
-| `DRL_REDIS_PORT`     | `6379`      | Redis port (1–65535)                 |
-| `DRL_REDIS_PASSWORD` | empty       | Redis password (optional)            |
+| Variable                     | Default     | Description                        |
+|------------------------------|-------------|------------------------------------|
+| `DRL_HOSTNAME`               | empty       | API server bind hostname           |
+| `DRL_PORT`                   | `8080`      | API server port (1–65535)          |
+| `DRL_RATE_LIMIT`             | `10`        | Max requests allowed per window    |
+| `DRL_WINDOW_SIZE_SEC`        | `10`        | Window duration in seconds         |
+| `DRL_REDIS_HOSTNAME`         | `drl-redis` | Redis hostname (required)          |
+| `DRL_REDIS_PORT`             | `6379`      | Redis port (1–65535)               |
+| `DRL_REDIS_PASSWORD`         | empty       | Redis password (optional)          |
+| `DRL_READ_HEADER_TIMEOUT_MS` | `500`       | HTTP read request header timeout   |
+| `DRL_READ_TIMEOUT_MS`        | `500`       | HTTP read request timeout          |
+| `DRL_TIMEOUT_MS`             | `1000`      | HTTP response timeout              |
 
 ## Running the Application
 
