@@ -32,6 +32,11 @@ func New(ctx context.Context, hostname string, port int, password string) (*Stor
 	return &s, nil
 }
 
+// FlushAll removes all keys from the database.
+func (s *Storage) FlushAll(ctx context.Context) error {
+	return s.redisDB.FlushAll(ctx).Err()
+}
+
 // Close closes the connection to the database.
 func (s *Storage) Close() error {
 	return s.redisDB.Close()

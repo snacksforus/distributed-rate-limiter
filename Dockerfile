@@ -14,6 +14,10 @@ COPY internal ./internal/
 
 CMD ["go", "test", "-v", "-race", "-cover", "./..."]
 
+FROM test AS integration-test
+
+CMD ["go", "test", "-v", "-race", "-tags=integration", "./cmd/"]
+
 FROM alpine:latest AS builder
 
 RUN apk add --no-cache go

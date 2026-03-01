@@ -12,9 +12,10 @@ lint:
 tidy:
 	go fmt ./...
 
-# docker compose run --rm test; EXIT=$$?; docker compose down; exit $$EXIT
+# The integration test is run separately from the unit tests because it flushes the Redis cache.
 test:
 	docker compose run --build --rm test
+	docker compose run --rm integration-test
 	docker compose down
 
 run:

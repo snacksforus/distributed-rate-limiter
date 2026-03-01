@@ -27,5 +27,21 @@ services:
       redis:
         condition: service_healthy
 
+  integration-test:
+    container_name: drl-api-server-integration-test
+    hostname: drl-api-server-integration-test
+    build:
+      context: .
+      target: integration-test
+    networks:
+      - drl-network-test
+    environment:
+      DRL_REDIS_HOSTNAME: drl-redis-test
+      DRL_REDIS_PORT: 6379
+      DRL_REDIS_PASSWORD: ""
+    depends_on:
+      redis:
+        condition: service_healthy
+
 networks:
   drl-network-test:
