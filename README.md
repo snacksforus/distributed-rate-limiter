@@ -129,3 +129,45 @@ make test
 - [ ] add request logging middleware
 - [ ] add support for API based client key
 - [ ] increase middleware test coverage
+
+## Commit Signature Verification
+
+All commits from 2026-05-25 onward are signed using SSH keys backed by a YubiKey
+FIDO2 hardware security key. Each signing operation requires physical presence
+on the hardware device. Commits predating this policy are unsigned.
+
+### Verifying commits locally
+
+Configure Git to use the included trust files:
+
+```bash
+git config gpg.ssh.allowedSignersFile .allowed_signers
+git config gpg.ssh.revocationFile .revoked_signers
+```
+
+Verify a specific commit:
+
+```bash
+git verify-commit <hash>
+```
+
+Verify the full log:
+
+```bash
+git log --show-signature
+```
+
+### Key rotation and revocation
+
+The `.allowed_signers` file lists all currently trusted public keys. The
+`.revoked_signers` file lists keys that must never be trusted, regardless of the
+date of the commit they signed. Both files are updated and committed when keys
+are added, rotated, or revoked.
+
+In the event of a key compromise, the affected key will be removed from GitHub
+and added to `.revoked_signers`. A signed notice commit will be pushed to this
+repository identifying the old and new key fingerprints and the date from which
+the old key must be considered untrusted.
+
+Public keys for this account are discoverable at:
+`https://github.com/snacksforus.keys`
